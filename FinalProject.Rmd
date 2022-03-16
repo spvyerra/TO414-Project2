@@ -17,7 +17,6 @@ knitr::opts_chunk$set(echo = TRUE)
 We obtained our data from a Kaggle project https://www.kaggle.com/zabonpan/shark-tank-pitches-deals-season-111
 ```{r}
 data <- read.csv("SharkTankData.csv")
-data$Season <- as.factor(data$Season)
 data$Episode <- as.factor(data$Episode)
 data$Deal <- as.factor(data$Deal)
 data$Category <- as.factor(data$Category)
@@ -38,5 +37,19 @@ data$Daymond.John <- as.factor(data$Daymond.John)
 data$Kevin.O.Leary <- as.factor(data$Kevin.O.Leary)
 data$Guest <- as.factor(data$Guest)
 data$State <- NULL
+data$Investment.shark <- as.numeric(gsub(",", "", data$Investment.shark))
+
+# Taking subset of season 5 onwards
+data <- subset(data, Season >= 5)
+data$Season <- as.factor(data$Season)
+
 summary(data)
 ```
+
+
+# 
+
+```{r}
+
+```
+
