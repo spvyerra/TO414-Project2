@@ -54,7 +54,8 @@ summary(data)
 ```{r}
 # Randomize the rows in the data (shuffling the rows)
 set.seed(12345)
-shark_rand <- data[sample(nrow(data)),]
+shark_rand <- data[sample(1:nrow(data)),]
+shark_dummy <- shark_rand
 
 #Normalize the data
 normalize <- function(x) {
@@ -62,26 +63,66 @@ normalize <- function(x) {
 }
 
 # we are going to normalize everything 
-shark_norm <- as.data.frame(lapply(shark_rand, normalize))
+#shark_norm <- as.data.frame(lapply(shark_dummy, normalize))
 ```
 
 ## Getting Train and Test Samples
 
 ```{r}
 # Selects 10000 random rows for test data
-test_set <- sample(1:nrow(shark_norm), 350) 
+test_set <- sample(nrow(shark_dummy), 50)
 # Depending on R-version and computer, different rows may be selected. 
 # If that happens, results are different. 
 
 # Create a train set and test set
 #First the predictors - all columns except the Deal column
-shark_train <- shark_norm[-test_set, -match("Deal",names(shark_norm))]
-shark_test <- shark_norm[test_set, -match("Deal",names(shark_norm))]
+shark_train <- shark_dummy[-test_set, ]
+shark_test <- shark_dummy[test_set, ]
 
 #Now the response (aka Labels) - only the Deal column
-shark_train_labels <- shark_norm[-test_set, "Deal"]
-shark_test_labels <- shark_norm[test_set, "Deal"]
+shark_train_labels <- shark_dummy[-test_set, "Deal1"]
+shark_test_labels <- shark_dummy[test_set, "Deal1"]
+shark_labels <-shark_rand[,"Deal"]
 ```
+
+## Creating a Decision Tree to Predict if a business can get a Deal
+
+```{r}
+library(lmtest)
+library(aod)
+library(caret)
+library(VGAM)
+library(class)
+library(gmodels)
+library(C50)
+
+# Remove data that only Deals would have
+removed_data <- shark_rand
+
+removed_data$DEAL_Equity <- NULL
+removed_data$DEAL_Amount <- NULL
+removed_data$DEAL_Valuation <- NULL
+removed_data$Royalty <- NULL
+removed_data$Loan <- NULL
+
+removed_data$Barbara.Corcoran <- NULL
+removed_data$Mark.Cuban <- NULL
+removed_data$Lori.Greiner <- NULL
+removed_data$Robert.Herjavec <- NULL
+removed_data$Daymond.John <- NULL
+removed_data$Kevin.O.Leary <- NULL
+removed_data$Guest <- NULL
+removed_data$Num.of.Sharks <- NULL
+removed_data$Investment.shark <- NULL
+
+mod1 <- C5.0(Deal ~ ., data = removed_data)
+
+predicted_shark <- predict(mod1, removed_data)
+
+CrossTable(x = shark_labels, y = predicted_shark, prop.chisq = FALSE)
+confusionMatrix(predicted_shark, shark_labels, positive = "1")
+```
+
 
 ## Creating a Logistic Regression Model
 
