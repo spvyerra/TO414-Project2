@@ -17,18 +17,34 @@ knitr::opts_chunk$set(echo = TRUE)
 We obtained our data from a Kaggle project https://www.kaggle.com/zabonpan/shark-tank-pitches-deals-season-111
 ```{r}
 data <- read.csv("SharkTankData.csv")
-data$Episode <- as.factor(data$Episode)
-data$Deal <- as.factor(data$Deal)
-data$Category <- as.factor(data$Category)
-data$Entrepreneur.Gender <- as.factor(data$Entrepreneur.Gender)
+
+# Taking subset of season 5 onwards
+data <- subset(data, Season >= 5)
 data$ASK_Equity <- as.numeric(substr(data$ASK_Equity,1,nchar(data$ASK_Equity)-1))/100
 data$ASK_Amount <- as.numeric(gsub(",", "", data$ASK_Amount))
 data$ASK_Valuation <- as.numeric(gsub(",", "", data$ASK_Valuation))
+data$ASK_Equity <- ifelse(is.na(data$ASK_Equity), 0, data$ASK_Equity)
+data$ASK_Amount <- ifelse(is.na(data$ASK_Amount), 0, data$ASK_Amount)
+data$ASK_Valuation <- ifelse(is.na(data$ASK_Valuation), 0, data$ASK_Valuation)
+
 data$DEAL_Equity <- as.numeric(substr(data$DEAL_Equity,1,nchar(data$DEAL_Equity)-1))/100
 data$DEAL_Amount <- as.numeric(gsub(",", "", data$DEAL_Amount))
 data$DEAL_Valuation <- as.numeric(gsub(",", "", data$DEAL_Valuation))
+data$DEAL_Equity <- ifelse(is.na(data$DEAL_Equity), 0, data$DEAL_Equity)
+data$DEAL_Amount <- ifelse(is.na(data$DEAL_Amount), 0, data$DEAL_Amount)
+data$DEAL_Valuation <- ifelse(is.na(data$DEAL_Valuation), 0, data$DEAL_Valuation)
+
+data$Investment.shark <- as.numeric(gsub(",", "", data$Investment.shark))
+data$Investment.shark <- ifelse(is.na(data$Investment.shark), 0, data$Investment.shark)
+data$X..Sharks <- ifelse(is.na(data$X..Sharks), 0, data$X..Sharks)
+data$Loan <- ifelse(is.na(data$Loan), 0, as.numeric(data$Loan))
+data$State <- NULL
+data$Business <- NULL
+data$Description <- NULL
+data$Notes <- NULL
+data$Category <- as.factor(data$Category)
+data$Entrepreneur.Gender <- as.factor(data$Entrepreneur.Gender)
 data$Royalty <- as.factor(data$Royalty)
-data$Loan <- as.factor(as.numeric(data$Loan))
 data$Barbara.Corcoran <- as.factor(data$Barbara.Corcoran)
 data$Mark.Cuban <- as.factor(data$Mark.Cuban)
 data$Lori.Greiner <- as.factor(data$Lori.Greiner)
@@ -36,15 +52,6 @@ data$Robert.Herjavec <- as.factor(data$Robert.Herjavec)
 data$Daymond.John <- as.factor(data$Daymond.John)
 data$Kevin.O.Leary <- as.factor(data$Kevin.O.Leary)
 data$Guest <- as.factor(data$Guest)
-data$State <- NULL
-data$Business <- NULL
-data$Description <- NULL
-data$Notes <- NULL
-data$Investment.shark <- as.numeric(gsub(",", "", data$Investment.shark))
-
-# Taking subset of season 5 onwards
-data <- subset(data, Season >= 5)
-data$Season <- as.factor(data$Season)
 
 summary(data)
 ```
@@ -55,7 +62,6 @@ summary(data)
 # Randomize the rows in the data (shuffling the rows)
 set.seed(12345)
 shark_rand <- data[sample(1:nrow(data)),]
-shark_dummy <- shark_rand
 
 #Normalize the data
 normalize <- function(x) {
@@ -63,25 +69,26 @@ normalize <- function(x) {
 }
 
 # we are going to normalize everything 
-#shark_norm <- as.data.frame(lapply(shark_dummy, normalize))
+shark_mm <- as.data.frame(model.matrix(~.-1,shark_rand))
+shark_norm <- as.data.frame(lapply(shark_mm, normalize))
 ```
 
 ## Getting Train and Test Samples
 
 ```{r}
 # Selects 10000 random rows for test data
-test_set <- sample(nrow(shark_dummy), 50)
+test_set <- sample(nrow(shark_rand), 50)
 # Depending on R-version and computer, different rows may be selected. 
 # If that happens, results are different. 
 
 # Create a train set and test set
 #First the predictors - all columns except the Deal column
-shark_train <- shark_dummy[-test_set, ]
-shark_test <- shark_dummy[test_set, ]
+shark_train <- shark_rand[-test_set, ]
+shark_test <- shark_rand[test_set, ]
 
 #Now the response (aka Labels) - only the Deal column
-shark_train_labels <- shark_dummy[-test_set, "Deal1"]
-shark_test_labels <- shark_dummy[test_set, "Deal1"]
+shark_train_labels <- shark_rand[-test_set, "Deal"]
+shark_test_labels <- shark_rand[test_set, "Deal"]
 shark_labels <-shark_rand[,"Deal"]
 ```
 
@@ -99,6 +106,7 @@ library(C50)
 # Remove data that only Deals would have
 removed_data <- shark_rand
 
+removed_data$Deal <- as.factor(removed_data$Deal)
 removed_data$DEAL_Equity <- NULL
 removed_data$DEAL_Amount <- NULL
 removed_data$DEAL_Valuation <- NULL
@@ -118,9 +126,28 @@ removed_data$Investment.shark <- NULL
 mod1 <- C5.0(Deal ~ ., data = removed_data)
 
 predicted_shark <- predict(mod1, removed_data)
+shark_labels <- as.factor(shark_labels)
 
 CrossTable(x = shark_labels, y = predicted_shark, prop.chisq = FALSE)
 confusionMatrix(predicted_shark, shark_labels, positive = "1")
+```
+
+
+## Creating a KNN Model
+
+```{r}
+predictor_vars <- shark_norm
+
+sqrt(nrow(shark_rand))
+
+predicted_knn <- knn(train = shark_norm, test = shark_norm,
+                      cl = as.factor(shark_norm$Deal), k=21)
+summary(predicted_knn)
+
+predicted_knn <- as.factor(predicted_knn)
+
+CrossTable(x = predicted_knn, y = shark_norm$Deal, prop.chisq = FALSE)
+confusionMatrix(as.factor(shark_norm$Deal), predicted_knn, positive = "1")
 ```
 
 
