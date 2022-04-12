@@ -37,6 +37,8 @@ data$DEAL_Valuation <- ifelse(is.na(data$DEAL_Valuation), 0, data$DEAL_Valuation
 data$Investment.shark <- as.numeric(gsub(",", "", data$Investment.shark))
 data$Investment.shark <- ifelse(is.na(data$Investment.shark), 0, data$Investment.shark)
 data$X..Sharks <- ifelse(is.na(data$X..Sharks), 0, data$X..Sharks)
+data$Loan <- ifelse(data$Loan == "Y", 1, data$Loan)
+data$Loan <- ifelse(data$Loan == "N", 0, data$Loan)
 data$Loan <- ifelse(is.na(data$Loan), 0, as.numeric(data$Loan))
 data$State <- NULL
 data$Business <- NULL
@@ -62,15 +64,6 @@ summary(data)
 # Randomize the rows in the data (shuffling the rows)
 set.seed(12345)
 shark_rand <- data[sample(1:nrow(data)),]
-
-#Normalize the data
-normalize <- function(x) {
-  return ((x - min(x)) / (max(x) - min(x)))
-}
-
-# we are going to normalize everything 
-shark_mm <- as.data.frame(model.matrix(~.-1,shark_rand))
-shark_norm <- as.data.frame(lapply(shark_mm, normalize))
 ```
 
 ## Getting Train and Test Samples
@@ -136,18 +129,36 @@ confusionMatrix(predicted_shark, shark_labels, positive = "1")
 ## Creating a KNN Model
 
 ```{r}
-predictor_vars <- shark_norm
+#Normalize the data
+normalize <- function(x) {
+  return ((x - min(x)) / (max(x) - min(x)))
+}
 
-sqrt(nrow(shark_rand))
+# we are going to normalize everything 
+shark_mm <- as.data.frame(model.matrix(~.-1,shark_rand))
+shark_norm <- as.data.frame(lapply(shark_mm, normalize))
 
-predicted_knn <- knn(train = shark_norm, test = shark_norm,
-                      cl = as.factor(shark_norm$Deal), k=21)
-summary(predicted_knn)
+norm_sample <- sample(nrow(shark_norm), 128)
 
-predicted_knn <- as.factor(predicted_knn)
+# Create a train set and test set
+#First the predictors - all columns except the Deal column
+norm_train <- shark_norm[-norm_sample, ]
+norm_test <- shark_norm[norm_sample, ]
 
-CrossTable(x = predicted_knn, y = shark_norm$Deal, prop.chisq = FALSE)
-confusionMatrix(as.factor(shark_norm$Deal), predicted_knn, positive = "1")
+#Now the response (aka Labels) - only the Deal column
+norm_train_labels <- shark_norm[-norm_sample, "Deal"]
+norm_test_labels <- shark_norm[norm_sample, "Deal"]
+
+
+
+predict_knn <- knn(train = norm_train, test = norm_test,
+                      cl = as.factor(norm_train_labels), k=21)
+
+summary(predict_knn)
+predict_knn <- as.factor(predict_knn)
+
+CrossTable(x = predict_knn, y = norm_test_labels, prop.chisq = FALSE)
+confusionMatrix(as.factor(norm_test_labels), predict_knn, positive = "1")
 ```
 
 
