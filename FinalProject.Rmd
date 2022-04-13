@@ -99,7 +99,7 @@ shark_labels <-shark_rand[,"Deal"]
 
 ## Creating a Logistic Regression Model
 
-
+The first step into data exploration started off with creating a Logistic Regression Model as we were curious as to what factors were more important than others when determining the success of a business pitch. Some interesting insights we got from the model were that pitches involving Food/Beverarges as well as lifestyle/homes were more significant with a better chance of getting a deal done. However, we quickly learned that our Logistic Regression Model could only be a rudimentary beginning to determine what model works best. In this model, it accounted for factors such as Ask/Deal equity and the individual sharks which provide little to no insight into how exactly sharks decided whether or not to invest in a business. For example, having a significant coefficient value for Barbara Corcoran does not provide any significant insights into why she may be more likely to invest in certain products or services.
 
 ```{r}
 linear_model = glm(shark_train_labels ~ ., data = shark_train, family ="binomial")
