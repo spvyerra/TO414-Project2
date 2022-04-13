@@ -115,6 +115,7 @@ removed_data$Kevin.O.Leary <- NULL
 removed_data$Guest <- NULL
 removed_data$Num.of.Sharks <- NULL
 removed_data$Investment.shark <- NULL
+removed_data$X..Sharks <- NULL
 
 mod1 <- C5.0(Deal ~ ., data = removed_data)
 
