@@ -149,7 +149,9 @@ confusionMatrix(as.factor(norm_test_labels), predict_knn, positive = "1")
 
 ## Creating a Decision Tree to Predict if a business can get a Deal
 
-After working on kNN we tried out making
+After working on kNN we tried making a decision tree model to see if it would become more accurate. It turns out that a decision tree would be more accurate than a kNN model.
+
+One major thing we noticed, however, was that there were specific columns that include the results, so those columns needed to be removed from the training data. For example, the column labeled DEAL_Equity must be removed because a row would only have this data when a deal actually occured.
 
 ```{r}
 
