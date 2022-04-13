@@ -15,6 +15,9 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # Shark Tank Data
 We obtained our data from a Kaggle project https://www.kaggle.com/zabonpan/shark-tank-pitches-deals-season-111
+
+We started with needing clean the data, because there were some rows with incomplete data values.
+
 ```{r}
 data <- read.csv("SharkTankData.csv")
 
@@ -60,15 +63,13 @@ summary(data)
 
 ## Getting Data Ready for Analysis
 
+Next we get our dataset ready for analysis.
+
 ```{r}
 # Randomize the rows in the data (shuffling the rows)
 set.seed(12345)
 shark_rand <- data[sample(1:nrow(data)),]
-```
 
-## Getting Train and Test Samples
-
-```{r}
 # Selects 10000 random rows for test data
 test_set <- sample(nrow(shark_rand), 50)
 # Depending on R-version and computer, different rows may be selected. 
@@ -83,6 +84,56 @@ shark_test <- shark_rand[test_set,  -match("Deal",names(shark_rand))]
 shark_train_labels <- shark_rand[-test_set, "Deal"]
 shark_test_labels <- shark_rand[test_set, "Deal"]
 shark_labels <-shark_rand[,"Deal"]
+```
+
+## Creating a Logistic Regression Model
+
+
+
+```{r}
+linear_model = glm(shark_train_labels ~ ., data = shark_train, family ="binomial")
+summary(linear_model)
+results <- shark_test
+results$pred_glm <- predict(linear_model, newdata = shark_test, type = "response")
+results$pred_glm <- as.factor(ifelse(results$pred_glm > 0.5, 1, 0))
+confusionMatrix(results$pred_glm, as.factor(shark_test_labels), positive = "1")
+```
+
+
+
+## Creating a KNN Model
+
+```{r}
+#Normalize the data
+normalize <- function(x) {
+  return ((x - min(x)) / (max(x) - min(x)))
+}
+
+# we are going to normalize everything 
+shark_mm <- as.data.frame(model.matrix(~.-1,shark_rand))
+shark_norm <- as.data.frame(lapply(shark_mm, normalize))
+
+norm_sample <- sample(nrow(shark_norm), 128)
+
+# Create a train set and test set
+#First the predictors - all columns except the Deal column
+norm_train <- shark_norm[-norm_sample, -match("Deal",names(shark_norm)) ]
+norm_test <- shark_norm[norm_sample, -match("Deal",names(shark_norm)) ]
+
+#Now the response (aka Labels) - only the Deal column
+norm_train_labels <- shark_norm[-norm_sample, "Deal"]
+norm_test_labels <- shark_norm[norm_sample, "Deal"]
+
+
+
+predict_knn <- knn(train = norm_train, test = norm_test,
+                      cl = as.factor(norm_train_labels), k=21)
+
+summary(predict_knn)
+predict_knn <- as.factor(predict_knn)
+
+CrossTable(x = predict_knn, y = norm_test_labels, prop.chisq = FALSE)
+confusionMatrix(as.factor(norm_test_labels), predict_knn, positive = "1")
 ```
 
 ## Creating a Decision Tree to Predict if a business can get a Deal
@@ -124,53 +175,5 @@ shark_labels <- as.factor(shark_labels)
 
 CrossTable(x = shark_labels, y = predicted_shark, prop.chisq = FALSE)
 confusionMatrix(predicted_shark, shark_labels, positive = "1")
-```
-
-
-## Creating a KNN Model
-
-```{r}
-#Normalize the data
-normalize <- function(x) {
-  return ((x - min(x)) / (max(x) - min(x)))
-}
-
-# we are going to normalize everything 
-shark_mm <- as.data.frame(model.matrix(~.-1,shark_rand))
-shark_norm <- as.data.frame(lapply(shark_mm, normalize))
-
-norm_sample <- sample(nrow(shark_norm), 128)
-
-# Create a train set and test set
-#First the predictors - all columns except the Deal column
-norm_train <- shark_norm[-norm_sample, -match("Deal",names(shark_norm)) ]
-norm_test <- shark_norm[norm_sample, -match("Deal",names(shark_norm)) ]
-
-#Now the response (aka Labels) - only the Deal column
-norm_train_labels <- shark_norm[-norm_sample, "Deal"]
-norm_test_labels <- shark_norm[norm_sample, "Deal"]
-
-
-
-predict_knn <- knn(train = norm_train, test = norm_test,
-                      cl = as.factor(norm_train_labels), k=21)
-
-summary(predict_knn)
-predict_knn <- as.factor(predict_knn)
-
-CrossTable(x = predict_knn, y = norm_test_labels, prop.chisq = FALSE)
-confusionMatrix(as.factor(norm_test_labels), predict_knn, positive = "1")
-```
-
-
-## Creating a Logistic Regression Model
-
-```{r}
-linear_model = glm(shark_train_labels ~ ., data = shark_train, family ="binomial")
-summary(linear_model)
-results <- shark_test
-results$pred_glm <- predict(linear_model, newdata = shark_test, type = "response")
-results$pred_glm <- as.factor(ifelse(results$pred_glm > 0.5, 1, 0))
-confusionMatrix(results$pred_glm, as.factor(shark_test_labels), positive = "1")
 ```
 
