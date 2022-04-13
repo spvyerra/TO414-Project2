@@ -16,10 +16,12 @@ These are the business questions that we were thinking of answering when we init
 - What is the ideal Shark Tank pitch that gives a competitor the best shot of getting funded at the highest valuation?
 - Which target should you try to tailor your pitch to, depending on what your company does?
 
+Of these two questions we decide to explore the first one more in-depth, using the data we found below. We thought this was a more important topic to cover since we wanted to discover and create further applications of leveraging the key components necessary for a successful business pitch.
+
 # Shark Tank Data
 We obtained our data from a Kaggle project https://www.kaggle.com/zabonpan/shark-tank-pitches-deals-season-111
 
-We started with needing clean the data, because there were some rows with incomplete data values.
+We started with cleaning the data, because there were some rows with incomplete data values or those that needed to switched to a factor.
 
 ```{r}
 data <- read.csv("SharkTankData.csv")
