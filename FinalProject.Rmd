@@ -66,6 +66,14 @@ summary(data)
 Next we get our dataset ready for analysis.
 
 ```{r}
+library(lmtest)
+library(aod)
+library(caret)
+library(VGAM)
+library(class)
+library(gmodels)
+library(C50)
+
 # Randomize the rows in the data (shuffling the rows)
 set.seed(12345)
 shark_rand <- data[sample(1:nrow(data)),]
@@ -138,14 +146,9 @@ confusionMatrix(as.factor(norm_test_labels), predict_knn, positive = "1")
 
 ## Creating a Decision Tree to Predict if a business can get a Deal
 
+After working on kNN we tried out making
+
 ```{r}
-library(lmtest)
-library(aod)
-library(caret)
-library(VGAM)
-library(class)
-library(gmodels)
-library(C50)
 
 # Remove data that only Deals would have
 removed_data <- shark_rand
