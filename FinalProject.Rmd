@@ -174,21 +174,3 @@ results$pred_glm <- as.factor(ifelse(results$pred_glm > 0.5, 1, 0))
 confusionMatrix(results$pred_glm, as.factor(shark_test_labels), positive = "1")
 ```
 
-## ANN Model
-
-```{r}
-library(neuralnet)
-ann_model <- neuralnet(formula = shark_train_labels ~ . ,
-                      data = shark_train, hidden = 1, stepmax = 1e8)
-# visualize the network topology
-plot(ann_model)
-
-# Running predict command
-sqrt(nrow(shark_train))
-pred_ann <- predict(ann_model, newdata = shark_test,  type = "response")
-pred_ann <- as.factor(ifelse(pred_ann > 0.5, 1, 0))
-
-CrossTable(x = shark_test_labels, y = pred_ann, prop.chisq=FALSE)
-confusionMatrix(pred_ann, as.factor(shark_test_labels), positive = "1")
-```
-
