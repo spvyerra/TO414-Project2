@@ -10,6 +10,9 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 # Potential Business Questions
+
+These are the business questions that we were thinking of answering when we initially found our dataset:
+
 - What is the ideal Shark Tank pitch that gives a competitor the best shot of getting funded at the highest valuation?
 - Which target should you try to tailor your pitch to, depending on what your company does?
 
