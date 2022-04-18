@@ -116,6 +116,8 @@ confusionMatrix(results$pred_glm, as.factor(shark_test_labels), positive = "1")
 
 ## Creating a KNN Model
 
+There were glaring issues with linear regression model. Specifically, it would utilize the results to train the model itself. From this we decided to test out how a KNN model would work since we thought that funded companies would normally clump close together. From this we made the following KNN model with a 71% accuracy.
+
 ```{r}
 #Normalize the data
 normalize <- function(x) {
@@ -125,7 +127,6 @@ normalize <- function(x) {
 # we are going to normalize everything 
 shark_mm <- as.data.frame(model.matrix(~.-1,shark_rand))
 shark_norm <- as.data.frame(lapply(shark_mm, normalize))
-
 norm_sample <- sample(nrow(shark_norm), 128)
 
 # Create a train set and test set
